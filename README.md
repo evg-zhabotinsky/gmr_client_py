@@ -11,7 +11,8 @@ I simply had trouble finding a GMR client that works on Linux, so I've written o
 
 It does that by manipulating LUA scripts that control Civ5's UI behavior. If it gets stuck like that, just run `./fix_autoload.py`.
 
-For now the only frontend is CLI. Start it as `./gmr_cli.py`.
+For now the only frontend is CLI. Start it as `./gmr_cli.py AUTH_KEY` for the first time.
+After that, drop the key. If needed, change it in `~/.local/share/gmr_client_py/config`.
 
 ### Notes
 
