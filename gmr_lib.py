@@ -35,8 +35,12 @@ class GMRSession(object):
 		self.update_status()
 
 	def do_get(self, addr):
-		r = self.session.get('http://multiplayerrobot.com/api/Diplomacy/' + addr)
-		assert r.ok
+		import time
+		while True:
+			r = self.session.get('http://multiplayerrobot.com/api/Diplomacy/' + addr)
+			if r.ok:
+				break
+			time.sleep(self.interval)
 		assert r.headers['Content-Type'] == 'application/json; charset=utf-8'
 		return r.json()
 
@@ -72,20 +76,26 @@ class GMRSession(object):
 			self.game_count = len(self.games)
 
 	def do_download(self, game_id, fname):
-		r = self.session.get('http://multiplayerrobot.com/api/Diplomacy/' +
-			'GetLatestSaveFileBytesCompressed?authKey={}&gameId={}'
-			.format(self.auth_key, game_id))
-		assert r.ok
+		while True:
+			r = self.session.get('http://multiplayerrobot.com/api/Diplomacy/' +
+				'GetLatestSaveFileBytesCompressed?authKey={}&gameId={}'
+				.format(self.auth_key, game_id))
+			if r.ok:
+				break
+			time.sleep(self.interval)
 		assert r.headers['Content-Type'] == 'application/octet-stream'
 		assert r.headers['Content-Disposition'] == 'attachment; filename="(GMR) Play this one!.Civ5Save"'
 		decompress_and_dump(fname, r.content)
 
 	def do_upload(self, turn_id, fname):
 		d = load_and_compress(fname)
-		r = self.session.post('http://multiplayerrobot.com/Game/UploadSaveClient',
-			data=[('turnId', str(turn_id)), ('isCompressed', 'True'), ('authKey', self.auth_key)],
-			files=[('saveFileUpload', (str(turn_id) + '.Civ5Save', d))])
-		assert r.ok
+		while True:
+			r = self.session.post('http://multiplayerrobot.com/Game/UploadSaveClient',
+				data=[('turnId', str(turn_id)), ('isCompressed', 'True'), ('authKey', self.auth_key)],
+				files=[('saveFileUpload', (str(turn_id) + '.Civ5Save', d))])
+			if r.ok:
+				break
+			time.sleep(self.interval)
 		assert r.headers['Content-Type'] == 'application/json; charset=utf-8'
 		j = r.json()
 		return j['ResultType'], j['PointsEarned']
@@ -199,12 +209,11 @@ class GMRClient(object):
 		from os import path
 		import time
 		if not path.exists(fname):
-			while not path.exists(fname):
-				time.sleep(5)
-		else:
-			mt = path.getmtime(fname) + 5
-			while mt > path.getmtime(fname):
-				time.sleep(5)
+			with open(fname, 'wb'):
+				pass
+		mt = path.getmtime(fname) + 5
+		while mt > path.getmtime(fname):
+			time.sleep(5)
 		time.sleep(2)
 
 	def do_turn(self, game):
@@ -214,7 +223,7 @@ class GMRClient(object):
 		turn_id = cturn['TurnId']
 		assert cturn['UserId'] == self.session.uid
 		import re
-		sname = '{}_{}_{}'.format(game_id, re.sub(r'[^A-Za-z_0-9.-]+', '', gname), turn_id)
+		sname = '{}_{}_{}'.format(game_id, re.sub(r'[^-A-Za-z_0-9. ]+', '', gname), turn_id)
 		dname = sname + '_done'
 		self.download_save(game_id, sname)
 		self.do_archive(sname, remove = False)

@@ -4,6 +4,8 @@
 
 I simply had trouble finding a GMR client that works on Linux, so I've written one myself.
 
+## It's not nearly finished yet! Using it might prove frustrating if you've got no experience with Python.
+
 #### Killer feature (On Linux, at least):
 
 * It can not only automatically download save file and start Civ5, but **also load the save automatically** once Civ5 is done starting up.
